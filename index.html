@@ -1,114 +1,292 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>beep... (inputt)</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins" rel="stylesheet">
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>@inputt</title>
 <style>
-body {
-  margin:0;
-  height:100%;
-  background:black;
-  color:white;
-  font-family:'Poppins', sans-serif;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-}
-
-#entryText {
-  font-style: italic;
-  font-size: 2em;
-  cursor: pointer;
-}
-
-#mainContent {
-  display:none;
-  text-align:center;
-}
-
-#pfp {
-  width:120px;
-  height:120px;
-  border-radius:50%;
-}
-
-#typewriter {
-  font-family: minivan;
-  border-right:2px solid white;
-}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#000;font-family:Inter,"Segoe UI",system-ui,-apple-system,Arial;color:#fff;overflow:hidden}
+#enter{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:40;background:#000;cursor:pointer;font-weight:700;font-size:32px}
+#enter.fade{opacity:0;pointer-events:none;transition:opacity .45s ease}
+#app{display:none;height:100%;width:100%;position:relative;perspective:1000px}
+#bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.35) saturate(.9);z-index:0}
+.controls{position:fixed;top:18px;right:18px;z-index:40;display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(0,0,0,0.45);border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+.controls button{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:6px 8px;border-radius:8px;cursor:pointer}
+.controls input[type=range]{width:110px}
+.stage{position:relative;z-index:10;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:25px}
+.card{background:rgba(0,0,0,0.55);border-radius:28px;padding:60px 80px;display:flex;flex-direction:column;align-items:center;gap:25px;min-width:600px;text-align:center;box-shadow:0 0 50px rgba(0,0,0,0.6);transform-style:preserve-3d;transition:transform 0.1s ease;animation:fadeInCard 1s ease forwards;opacity:0}
+@keyframes fadeInCard{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+.card img#pfp{width:160px;height:160px;border-radius:50%;border:3px solid #fff;object-fit:cover;animation:popIn 1s ease forwards;opacity:0}
+@keyframes popIn{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
+.title{font-size:36px;font-weight:700;overflow:hidden;white-space:nowrap}
+.description{font-size:22px;color:#ccc;max-width:500px;line-height:1.6;min-height:60px;overflow:hidden;white-space:nowrap}
+.socials{display:flex;gap:20px;margin-top:10px}
+.socials img{width:50px;height:50px;cursor:pointer;transition:transform .2s}
+.socials img:hover{transform:scale(1.2)}
+#discordWidget{margin-top:20px;width:400px;height:80px;border-radius:5px;overflow:hidden;border:none}
+.audio-card{margin-top:30px;background:rgba(0,0,0,0.5);border-radius:20px;padding:20px 25px;display:flex;align-items:center;gap:15px;min-width:500px;animation:fadeInCard 1s ease forwards;opacity:0}
+.audio-card img{width:60px;height:60px;border-radius:50%;border:2px solid #fff;object-fit:cover}
+.audio-info{display:flex;flex-direction:column}
+.audio-info .now{font-size:14px;color:#aaa}
+.audio-info .title{font-size:18px;font-weight:600;margin-top:2px}
+.progress-container{width:200px;height:6px;background:rgba(255,255,255,0.2);border-radius:3px;margin-top:5px}
+#progress-bar{width:0%;height:100%;background:#fff;border-radius:3px;transition:width 0.1s linear}
+#time-display{font-size:12px;color:#aaa;margin-top:2px}
+#githubBtn{margin-top:20px;padding:10px 20px;border:none;border-radius:10px;background:#1e1e1e;color:#fff;cursor:pointer;transition:0.3s}
+#githubModal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;justify-content:center;align-items:center;z-index:50;overflow:auto;animation:fadeIn 0.3s}
+#githubModalContent{background:#111;border-radius:20px;padding:30px;min-width:400px;max-width:800px;position:relative;animation:slideIn 0.3s}
+#closeModal{position:absolute;top:15px;right:15px;background:#222;color:#fff;border:none;border-radius:50%;width:30px;height:30px;font-weight:bold;cursor:pointer}
+.repo{padding:10px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.repo a{color:#1e90ff;text-decoration:none;font-weight:600}
+.repo .desc{color:#ccc;font-size:14px;margin-top:3px}
+.repo .updated{color:#aaa;font-size:12px;margin-top:2px}
+#notificationContainer{position:fixed;top:20px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:100}
+.cursorCanvas{position:fixed;top:0;left:0;pointer-events:none;width:100%;height:100%;z-index:1000}
 </style>
 </head>
-
 <body>
+<canvas id="cursorCanvas" class="cursorCanvas"></canvas>
+<div id="enter">Click to enter...</div>
+<div id="app">
+<video autoplay muted loop playsinline>
+    <source src="https://s3.filebin.net/filebin/fc33be01bc3a5b67525a43568d410a41d85cf353b1e337b2c787a5229ddb8f33/5a44db20c2ccb60c7c30cd1ce2af84831718584d26a22a09ae3b479c19bea5d5?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=7pMj6hGeoKewqmMQILjm%2F20251231%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251231T225925Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&response-cache-control=max-age%3D60&response-content-disposition=inline%3B%20filename%3D%22video.mp4%22&response-content-type=video%2Fmp4&X-Amz-Signature=b91091ba18b8d3cb44a7a0db0e0803cab8b405f0f5afd73e5694ed1a140f9bf4" type="video/mp4">
+</video>
 
-<div id="entryText">beep_dev</div>
-
-<div id="mainContent">
-  <img id="pfp">
-  <div id="header">beepdev (Inputt)</div>
-  <div id="typewriter"></div>
-
-  <iframe src="https://lanyard.cnrad.dev/api/..."></iframe>
-
-  <div>
-    <a href="https://discord.com/users/...">
-      <img src="assets/img/discord.png">
-    </a>
-    <a href="https://github.com/beepdevv">
-      <img src="assets/img/github.png">
-    </a>
-  </div>
+<div class="controls">
+<button id="muteBtn">Mute</button>
+<input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
 </div>
-
-<audio id="bgAudio" src="assets/audio/music.mp3" loop></audio>
-<video id="bgVideo" src="assets/audio/music.mp4" loop muted></video>
-
+<div class="stage">
+<div class="card" id="card">
+<div class="title" id="title">@inputt</div>
+<img id="pfp" src="{{ url_for('static', filename='images/pfp.png') }}" alt="Profile">
+<div class="description" id="typewriter"></div>
+<div class="socials" id="socials"></div>
+<iframe id="discordWidget" src="https://lanyard.cnrad.dev/api/1417537333271597186?borderRadius=5px&idleMessage=sleeping%20zzz&bg=a&animated=true" frameborder="0" scrolling="no"></iframe>
+</div>
+<div class="audio-card">
+<img src="{{ url_for('static', filename='images/pfp.png') }}" alt="Now Playing">
+<div class="audio-info">
+<div class="now">Now Playing...</div>
+<div class="title">Spit in my face - ThxSoMuch</div>
+<div class="progress-container">
+<div id="progress-bar"></div>
+</div>
+<div id="time-display">0:00 / 0:00</div>
+</div>
+</div>
+<button id="githubBtn">View GitHub Repos</button>
+<div id="githubModal">
+<div id="githubModalContent">
+<button id="closeModal">×</button>
+<h2 style="text-align:center;margin-bottom:20px;">GitHub Repositories</h2>
+<div id="repoContainer"></div>
+</div>
+</div>
+<div id="notificationContainer"></div>
+</div>
+</div>
 <script>
-// click to enter
-entryText.onclick = () => {
-  entryText.style.display = 'none';
-  mainContent.style.display = 'flex';
-  bgVideo.play();
-  bgAudio.play();
-  type();
-};
+const enter=document.getElementById('enter')
+const app=document.getElementById('app')
+const bg=document.getElementById('bg')
+const card=document.getElementById('card')
+enter.addEventListener('click',()=>{
+enter.classList.add('fade')
+setTimeout(()=>{
+enter.style.display='none'
+app.style.display='block'
+bg.muted=false
+bg.play().catch(e=>console.log(e))
+startTypewriter()
+startTitleAnimation()
+renderSocials()
+},500)
+})
+const muteBtn=document.getElementById('muteBtn')
+const volumeSlider=document.getElementById('volumeSlider')
+muteBtn.addEventListener('click',()=>{bg.muted=!bg.muted;muteBtn.textContent=bg.muted?"Unmute":"Mute"})
+volumeSlider.addEventListener('input',()=>{bg.volume=volumeSlider.value})
 
-// typewriter text
+card.addEventListener('mousemove', e=>{
+const rect = card.getBoundingClientRect()
+const x = e.clientX - rect.left
+const y = e.clientY - rect.top
+const cx = rect.width/2
+const cy = rect.height/2
+const dx = (x - cx)/cx
+const dy = (y - cy)/cy
+card.style.transform = `rotateY(${dx*10}deg) rotateX(${-dy*10}deg)`
+})
+card.addEventListener('mouseleave', ()=>{card.style.transform = 'rotateY(0deg) rotateX(0deg)'})
+
 const texts = [
-  "txt1",
-  "txt2",
-  "txt3",
-  "txt4"
-];
-
-let textIndex = 0;
-let charIndex = 0;
-
-function type() {
-  if (charIndex < texts[textIndex].length) {
-    typewriter.textContent += texts[textIndex][charIndex++];
-    setTimeout(type, 100);
-  } else {
-    setTimeout(erase, 1500);
-  }
+"Experienced C++ C# GO JS & PY Developer",
+"https://inputt.dev",
+"Creates discord bots",
+"Full-stack developer",
+"C++ | C# | Go | JavaScript | Python | Rust",
+"I share some of my source codes on GitHub",
+"Open for commissions"
+]
+const typewriterEl = document.getElementById('typewriter')
+let textIndex=0
+let charIndex=0
+let deleting=false
+let delay=80
+function startTypewriter(){
+const currentText = texts[textIndex]
+if(!deleting){
+typewriterEl.textContent = currentText.slice(0,charIndex+1)
+charIndex++
+if(charIndex===currentText.length){
+deleting=true
+setTimeout(startTypewriter,1500)
+return
+}
+}else{
+typewriterEl.textContent = currentText.slice(0,charIndex-1)
+charIndex--
+if(charIndex===0){
+deleting=false
+textIndex=(textIndex+1)%texts.length
+}
+}
+setTimeout(startTypewriter,delay)
 }
 
-function erase() {
-  if (charIndex > 0) {
-    typewriter.textContent =
-      texts[textIndex].substring(0, --charIndex);
-    setTimeout(erase, 50);
-  } else {
-    textIndex = (textIndex + 1) % texts.length;
-    setTimeout(type, 100);
-  }
+const titleEl=document.getElementById('title')
+const titleText='@inputt'
+let titleIndex=0
+function startTitleAnimation(){
+if(titleIndex<titleText.length){
+titleEl.textContent = titleText.slice(0,titleIndex+1)
+titleIndex++
+setTimeout(startTitleAnimation,150)
 }
+}
+
+const socialLinks = [
+{url:"https://github.com/inputtdevv", img:"{{ url_for('static', filename='images/github.png') }}"},
+{url:"https://open.spotify.com/user/31swtx4wba5vgwbz2ggkhukkrzvy?si=39f6ff62b3d44136", img:"{{ url_for('static', filename='images/spotify.png') }}"}
+]
+function renderSocials(){
+const container=document.getElementById('socials')
+socialLinks.forEach(s=>{
+const a=document.createElement('a')
+a.href=s.url
+a.target="_blank"
+const img=document.createElement('img')
+img.src=s.img
+a.appendChild(img)
+container.appendChild(a)
+})
+}
+
+const progressBar = document.getElementById('progress-bar')
+const timeDisplay = document.getElementById('time-display')
+function formatTime(seconds){
+const m = Math.floor(seconds/60)
+const s = Math.floor(seconds%60)
+return `${m}:${s<10?'0'+s:s}`
+}
+bg.addEventListener('timeupdate', ()=>{
+const progress = (bg.currentTime / bg.duration)*100
+progressBar.style.width = progress + '%'
+timeDisplay.textContent = `${formatTime(bg.currentTime)} / ${formatTime(bg.duration)}`
+})
+
+const githubBtn = document.getElementById('githubBtn')
+const githubModal = document.getElementById('githubModal')
+const closeModal = document.getElementById('closeModal')
+const repoContainer = document.getElementById('repoContainer')
+let knownRepos = []
+githubBtn.addEventListener('click',()=>{
+githubModal.style.display='flex'
+repoContainer.innerHTML='Loading...'
+fetch('https://api.github.com/users/inputtdevv/repos?sort=updated')
+.then(res=>res.json())
+.then(data=>{
+knownRepos = data.map(r=>r.id)
+repoContainer.innerHTML=''
+data.forEach(repo=>{
+const div=document.createElement('div')
+div.className='repo'
+div.innerHTML=`<a href="${repo.html_url}" target="_blank">${repo.name}</a>
+<div class="desc">${repo.description||''}</div>
+<div class="updated">Updated ${new Date(repo.updated_at).toLocaleDateString()}</div>`
+repoContainer.appendChild(div)
+})
+})
+})
+closeModal.addEventListener('click',()=>{githubModal.style.display='none'})
+
+function fetchRepos() {
+fetch('https://api.github.com/users/inputtdevv/repos?sort=updated')
+.then(res => res.json())
+.then(data => {
+if(!knownRepos.length) {knownRepos = data.map(r => r.id); return;}
+data.forEach(repo => {
+if(!knownRepos.includes(repo.id)){
+knownRepos.push(repo.id);
+showNotification(repo);
+}
+});
+});
+}
+
+function showNotification(repo){
+const container = document.getElementById('notificationContainer');
+const notif = document.createElement('div');
+notif.style.background='rgba(0,0,255,0.8)';
+notif.style.color='#fff';
+notif.style.padding='10px 15px';
+notif.style.borderRadius='10px';
+notif.style.cursor='pointer';
+notif.style.fontWeight='600';
+notif.style.boxShadow='0 0 15px rgba(0,0,255,0.6)';
+notif.textContent = `New Repo: ${repo.name}`;
+notif.onclick = () => window.open(repo.html_url,'_blank');
+container.appendChild(notif);
+setTimeout(()=>{notif.style.opacity=0;setTimeout(()=>notif.remove(),500)},5000);
+}
+
+setInterval(fetchRepos, 30000);
+
+const canvas = document.getElementById('cursorCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+let particles = [];
+document.addEventListener('mousemove', e => {
+for(let i=0;i<3;i++){
+particles.push({
+x:e.clientX,
+y:e.clientY,
+size:Math.random()*4+2,
+speedY:Math.random()*-1.5-0.5,
+alpha:1
+});
+}
+});
+function animate(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+for(let i=particles.length-1;i>=0;i--){
+let p = particles[i];
+ctx.fillStyle = `rgba(0, 150, 255, ${p.alpha})`;
+ctx.beginPath();
+ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+ctx.fill();
+p.y += p.speedY;
+p.alpha -= 0.02;
+if(p.alpha <=0) particles.splice(i,1);
+}
+requestAnimationFrame(animate);
+}
+animate();
+window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight});
 </script>
-
 </body>
 </html>
