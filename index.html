@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>beep... (inputt)</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins" rel="stylesheet">
+
+<style>
+body {
+  margin:0;
+  height:100%;
+  background:black;
+  color:white;
+  font-family:'Poppins', sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+}
+
+#entryText {
+  font-style: italic;
+  font-size: 2em;
+  cursor: pointer;
+}
+
+#mainContent {
+  display:none;
+  text-align:center;
+}
+
+#pfp {
+  width:120px;
+  height:120px;
+  border-radius:50%;
+}
+
+#typewriter {
+  font-family: monospace;
+  border-right:2px solid white;
+}
+</style>
+</head>
+
+<body>
+
+<div id="entryText">beep_dev</div>
+
+<div id="mainContent">
+  <img id="pfp">
+  <div id="header">beepdev (Inputt)</div>
+  <div id="typewriter"></div>
+
+  <iframe src="https://lanyard.cnrad.dev/api/..."></iframe>
+
+  <div>
+    <a href="https://discord.com/users/...">
+      <img src="assets/img/discord.png">
+    </a>
+    <a href="https://github.com/beepdevv">
+      <img src="assets/img/github.png">
+    </a>
+  </div>
+</div>
+
+<audio id="bgAudio" src="assets/audio/music.mp3" loop></audio>
+<video id="bgVideo" src="assets/audio/music.mp4" loop muted></video>
+
+<script>
+// click to enter
+entryText.onclick = () => {
+  entryText.style.display = 'none';
+  mainContent.style.display = 'flex';
+  bgVideo.play();
+  bgAudio.play();
+  type();
+};
+
+// typewriter text
+const texts = [
+  "Roblox Cheat Developer",
+  "malware developer",
+  "t.me/beep_dev",
+  "Former Owner of PTools"
+];
+
+let textIndex = 0;
+let charIndex = 0;
+
+function type() {
+  if (charIndex < texts[textIndex].length) {
+    typewriter.textContent += texts[textIndex][charIndex++];
+    setTimeout(type, 100);
+  } else {
+    setTimeout(erase, 1500);
+  }
+}
+
+function erase() {
+  if (charIndex > 0) {
+    typewriter.textContent =
+      texts[textIndex].substring(0, --charIndex);
+    setTimeout(erase, 50);
+  } else {
+    textIndex = (textIndex + 1) % texts.length;
+    setTimeout(type, 100);
+  }
+}
+</script>
+
+</body>
+</html>
